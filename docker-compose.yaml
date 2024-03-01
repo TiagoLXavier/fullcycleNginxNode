@@ -15,11 +15,16 @@ services:
     networks:
       - node-network
 
-  server1:
-    restart: on-failure
-    build: ./node
-    hostname: server1
-    container_name: server1
+  app:
+    build:
+      context: node
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 50s -- ./start.sh
+    # entrypoint: wait-for db:3306 -t 40 -- ./start.sh
+    volumes:
+      - ./node:/usr/src/app
+    restart: always
+    tty: true
     ports:
       - "81:3000"
     networks:
@@ -27,28 +32,18 @@ services:
     depends_on:
       - db
 
-  server2:
-    restart: on-failure
-    build: ./node
-    hostname: server2
-    container_name: server2
-    ports:
-      - "82:3000"
-    networks:
-      - node-network
-    depends_on:
-      - db
-
   nginx:
     build: ./nginx
+    entrypoint: dockerize -wait tcp://app:3000 -timeout 50s /docker-entrypoint.sh "nginx" "-g" "daemon off;"
     container_name: nginx
+    restart: always
+    tty: true
     ports:
       - "8080:80"
-    depends_on:
-      - server1
-      - server2
     networks:
       - node-network
+    depends_on:
+      - app
 
 networks:
   node-network:
