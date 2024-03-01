@@ -19,7 +19,7 @@ services:
     build:
       context: node
     container_name: app
-    entrypoint: dockerize -wait tcp://db:3306 -timeout 50s -- ./start.sh
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 50s -- bash start.sh
     # entrypoint: wait-for db:3306 -t 40 -- ./start.sh
     volumes:
       - ./node:/usr/src/app
